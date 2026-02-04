@@ -11,7 +11,12 @@ namespace Conduit
 
         public DebugLogger(string fileName)
         {
-            writer = new StreamWriter(Path.Combine(Persistence.DATA_DIRECTORY, fileName), true);
+            var logDirectory = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "MimicAutoAccept",
+                "logs");
+            Directory.CreateDirectory(logDirectory);
+            writer = new StreamWriter(Path.Combine(logDirectory, fileName), true);
             writer.AutoFlush = true;
             writer.WriteLine($"\n\n\n --- {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")} --- ");
             writer.WriteLine($"Started logging to {fileName}...");

@@ -7,7 +7,7 @@ import AudioPath from "../../static/queue-pop.mp3";
 interface ReadyCheckState {
     timer: number;
     state: "Invalid" | "InProgress";
-    playerResponse: "Accepted" | "Declined";
+    playerResponse: "Accepted" | "Declined" | "None";
 }
 
 @Component
@@ -16,6 +16,8 @@ export default class ReadyCheck extends Vue {
 
     state: ReadyCheckState | null = null;
     audio = new Audio(AudioPath);
+    autoAcceptTimer: number | null = null;
+    autoAcceptDelayMs = 3000;
 
     mounted() {
         // Start observing the ready check.
@@ -43,10 +45,12 @@ export default class ReadyCheck extends Vue {
     handleReadyCheckChange = async function(this: ReadyCheck, result: Result) {
         if (result.status !== 200) {
             this.state = null;
+            this.clearAutoAcceptTimer();
             return;
         }
 
         const newState: ReadyCheckState = result.content;
+        const previousState = this.state;
 
         // If the queue just popped, play the sound (and vibrate on android).
         if (this.state && this.state.state === "Invalid" && newState.state === "InProgress") {
@@ -59,6 +63,19 @@ export default class ReadyCheck extends Vue {
         }
 
         this.state = newState;
+
+        if (newState.state !== "InProgress") {
+            this.clearAutoAcceptTimer();
+            return;
+        }
+
+        if (previousState?.state !== "InProgress") {
+            this.scheduleAutoAccept();
+        }
+
+        if (this.hasResponded) {
+            this.clearAutoAcceptTimer();
+        }
     };
 
     /**
@@ -95,5 +112,22 @@ export default class ReadyCheck extends Vue {
      */
     decline() {
         this.$root.request("/lol-matchmaking/v1/ready-check/decline", "POST");
+    }
+
+    private scheduleAutoAccept() {
+        this.clearAutoAcceptTimer();
+
+        this.autoAcceptTimer = window.setTimeout(() => {
+            if (!this.state || this.state.state !== "InProgress") return;
+            if (this.hasResponded) return;
+
+            this.accept();
+        }, this.autoAcceptDelayMs);
+    }
+
+    private clearAutoAcceptTimer() {
+        if (this.autoAcceptTimer === null) return;
+        window.clearTimeout(this.autoAcceptTimer);
+        this.autoAcceptTimer = null;
     }
 }
