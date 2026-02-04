@@ -8,19 +8,19 @@ namespace Conduit
     public partial class App : System.Windows.Application
     {
         private NotifyIcon icon;
-        private MenuItem codeMenuItem;
-        private ConnectionManager manager;
+        private MenuItem autoAcceptMenuItem;
+        private AutoAcceptManager autoAcceptManager;
 
         public App()
         {
-            codeMenuItem = new MenuItem
+            autoAcceptMenuItem = new MenuItem("Auto Accept")
             {
-                Enabled = false
+                Checked = false
             };
 
             icon = new NotifyIcon
             {
-                Text = "Mimic Conduit",
+                Text = "Mimic Auto Accept",
                 Icon = Conduit.Properties.Resources.mimic,
                 Visible = true,
                 ContextMenu = new ContextMenu(new []
@@ -29,52 +29,27 @@ namespace Conduit
                     {
                         Enabled = false
                     },
-                    codeMenuItem,
-                    new MenuItem("Settings", (sender, ev) =>
-                    {
-                        new AboutWindow().Show();
-                    }),
+                    autoAcceptMenuItem,
                     new MenuItem("Quit", (a, b) => Shutdown())
                 })
             };
 
-            icon.Click += (a, b) =>
+            autoAcceptManager = new AutoAcceptManager();
+            autoAcceptManager.AutoAcceptChanged += UpdateAutoAcceptMenuItem;
+            UpdateAutoAcceptMenuItem(autoAcceptManager.AutoAcceptEnabled);
+
+            autoAcceptMenuItem.Click += (sender, args) =>
             {
-                // Only open about if left mouse is used (otherwise right clicking opens both context menu and about).
-                if (b is MouseEventArgs args && args.Button == MouseButtons.Left)
-                    new AboutWindow().Show();
+                autoAcceptManager.SetAutoAccept(!autoAcceptManager.AutoAcceptEnabled);
             };
-
-            icon.BalloonTipClicked += (a, b) =>
-            {
-                new AboutWindow().Show();
-            };
-
-            manager = new ConnectionManager(this);
-            Persistence.OnHubCodeChanged += UpdateCodeMenuItemText;
-            UpdateCodeMenuItemText();
-
-            // Unless we automatically launched at startup, display a bubble with info.
-            if (!Persistence.LaunchesAtStartup())
-            {
-                ShowNotification("Mimic will run in the background. Click this notification or the Mimic icon in the system tray for more information and how to connect from your phone.");
-            }
         }
 
         /**
-         * Updates the code menu item with the current code, if it has changed.
+         * Updates the menu item based on the current auto-accept state.
          */
-        private void UpdateCodeMenuItemText()
+        private void UpdateAutoAcceptMenuItem(bool enabled)
         {
-            var code = Persistence.GetHubCode();
-            if (code == null)
-            {
-                codeMenuItem.Text = "Start League to generate an access code!";
-            }
-            else
-            {
-                codeMenuItem.Text = "Access Code: " + code;
-            }
+            autoAcceptMenuItem.Checked = enabled;
         }
 
         /**
@@ -82,7 +57,7 @@ namespace Conduit
          */
         public void ShowNotification(string text)
         {
-            icon.BalloonTipTitle = "Mimic Conduit";
+            icon.BalloonTipTitle = "Mimic Auto Accept";
             icon.BalloonTipText = text;
             icon.ShowBalloonTip(5000);
         }
