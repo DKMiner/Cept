@@ -7,7 +7,7 @@ Cept! is a lightweight Windows tray application that auto-accepts League of Lege
 
 Have you ever faced the problem of clicking on Accept! and buttons grey out, but you're either running LoL on a low-end PC (like me :D), or you internet is bad (also like me), or it's just League of Legends client shenanigans, thus leading to match accept not registering, and your friends yell at you "WHY DIDN'T YOU ACCEPT WE HAVE BEEN IN QUEUE FOR 23 MINUTES"?
 
-if yes then this app is supposed to prevent that by sending an accept command after 8 seconds (just enough before the timer runs out) of not accepting or declining a ready check.
+if yes then this app is supposed to prevent that by sending an accept command after 6 seconds, and another one after 2 seconds for safety. If it's already accepted or declined (by user or the program), there's no longer the need for sending another accept request.
 
 It's super-lightweight, you can turn it on/off with only a few clicks, no extra screens, and works like other AutoAccepts too!
 
@@ -24,6 +24,8 @@ It's super-lightweight, you can turn it on/off with only a few clicks, no extra 
    * Keep on after joining: Toggle on to prevent Auto Accept from turning off after entering a match. Might use slightly more resources.
    * Quit: Close the app, duh.
   
+The icon will look red if it cannot connect to League of Legends WebSocket. So always make sure the icon looks blue before going into a queue, if not, restart your League of Legends client.
+
 
 ## Developing Cept!
 

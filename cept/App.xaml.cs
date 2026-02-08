@@ -11,6 +11,7 @@ namespace Cept
         private MenuItem autoAcceptMenuItem;
         private MenuItem keepOnMenuItem;
         private AutoAcceptManager autoAcceptManager;
+        private LeagueConnection leagueConnection;
 
         public App()
         {
@@ -40,6 +41,25 @@ namespace Cept
                     new MenuItem("Quit", (a, b) => Shutdown())
                 })
             };
+
+            leagueConnection = new LeagueConnection();
+
+            leagueConnection.OnConnected += () =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    icon.Icon = Cept.Properties.Resources.cept;
+                });
+            };
+
+            leagueConnection.OnDisconnected += () =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    icon.Icon = Cept.Properties.Resources.line;
+                });
+            };
+
 
             autoAcceptManager = new AutoAcceptManager();
             autoAcceptManager.AutoAcceptChanged += UpdateAutoAcceptMenuItem;

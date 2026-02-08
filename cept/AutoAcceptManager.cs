@@ -10,6 +10,8 @@ namespace Cept
         private Timer autoAcceptTimer;
         private bool autoAcceptEnabled;
         private bool keepOn;
+        private int autoAcceptFireCount;
+
 
         public event Action<bool> AutoAcceptChanged;
 
@@ -94,9 +96,14 @@ namespace Cept
                     return;
                 }
 
-                autoAcceptTimer = new Timer(_ => AcceptReadyCheck(), null, TimeSpan.FromSeconds(8), Timeout.InfiniteTimeSpan);
+                autoAcceptFireCount = 0;
+
+                autoAcceptTimer = new Timer(_ => AcceptReadyCheck(), null,
+                    TimeSpan.FromSeconds(6),
+                    Timeout.InfiniteTimeSpan);
             }
         }
+
 
         private void AcceptReadyCheck()
         {
@@ -104,22 +111,35 @@ namespace Cept
             {
                 if (!autoAcceptEnabled)
                 {
+                    ClearAutoAcceptTimer();
                     return;
                 }
 
                 leagueConnection.Request("POST", "/lol-matchmaking/v1/ready-check/accept", null)
                     .GetAwaiter()
                     .GetResult();
+
+                autoAcceptFireCount++;
+
+                if (autoAcceptFireCount == 1)
+                {
+                    // schedule second attempt after 2 seconds
+                    lock (timerLock)
+                    {
+                        autoAcceptTimer?.Change(TimeSpan.FromSeconds(2), Timeout.InfiniteTimeSpan);
+                    }
+
+                    return;
+                }
             }
             catch (Exception e)
             {
                 DebugLogger.Global.WriteError($"Failed to auto-accept ready check: {e}");
             }
-            finally
-            {
-                ClearAutoAcceptTimer();
-            }
+
+            ClearAutoAcceptTimer();
         }
+
 
         private void ClearAutoAcceptTimer()
         {
