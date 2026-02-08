@@ -28,7 +28,7 @@ namespace Cept
             icon = new NotifyIcon
             {
                 Text = "Cept! Auto Accept",
-                Icon = Cept.Properties.Resources.cept,
+                Icon = Cept.Properties.Resources.line,
                 Visible = true,
                 ContextMenu = new ContextMenu(new []
                 {
